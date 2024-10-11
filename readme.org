@@ -1,0 +1,6 @@
+- I prefer programming in Clojure
+- Most hacking tooling is in python
+- Basilisp
+
+For now just a breeding ground for Basilisp and other Clojure hacking
+utils, solve scripts and so forth.
