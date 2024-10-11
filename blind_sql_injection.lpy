@@ -1,0 +1,79 @@
+(import socket
+        ssl
+        sys)
+
+(defn empty->nil [x]
+  (if (empty? x)
+    nil
+    x))
+
+(defn with-tid [tid]
+  (.replace
+   #b"GET / HTTP/1.1\r\nHost: 0a0700f2038d50db845c3bea0066003f.web-security-academy.net\r\nCookie: TrackingId=h20pXZap9GYVCZUK; session=dA5rm18OSO5QTL8RSwdb4IjBpdV0yjj2\r\nCache-Control: max-age=0\r\nSec-Ch-Ua: \"Chromium\";v=\"129\", \"Not=A?Brand\";v=\"8\"\r\nSec-Ch-Ua-Mobile: ?0\r\nSec-Ch-Ua-Platform: \"macOS\"\r\nAccept-Language: en-GB,en;q=0.9\r\nUpgrade-Insecure-Requests: 1\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\r\nSec-Fetch-Site: none\r\nSec-Fetch-Mode: navigate\r\nSec-Fetch-User: ?1\r\nSec-Fetch-Dest: document\r\nAccept-Encoding: gzip, deflate, br\r\nPriority: u=0, i\r\n\r\n"
+  #_#b"GET / HTTP/1.1
+Host: 0a0700f2038d50db845c3bea0066003f.web-security-academy.net
+Cookie: TrackingId={{TID}}; session=dA5rm18OSO5QTL8RSwdb4IjBpdV0yjj2
+Cache-Control: max-age=0
+Sec-Ch-Ua: \"Chromium\";v=\"129\", \"Not=A?Brand\";v=\"8\"
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: \"macOS\"
+Accept-Language: en-GB,en;q=0.9
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Priority: u=0, i
+
+"
+  #b"{{TID}}"
+  tid))
+
+
+
+(defn bslurp [x]
+  (with [file (python/open x "rb")] (. file read)))
+
+(def context (ssl/create_default_context))
+
+(defn send [host port msg]
+  (with [sock (socket/create_connection #py(host port) ** :timeout 10)
+         tls_sock (context/wrap_socket sock ** :server_hostname host)]
+        (.sendall tls_sock msg)
+        (loop [response #b""]
+          (if-let [data (empty->nil (.recv tls_sock 4096))]
+            (recur (+ response data))
+            response))))
+
+
+(def host "0a0700f2038d50db845c3bea0066003f.web-security-academy.net")
+(def port 443)
+
+(defn write [bs]
+  
+  (-> (.- sys stdout)
+      (.- buffer)
+      (.write bs))
+  (.flush (.-stdout sys))
+  
+  bs)
+
+
+
+;; (send #py(host port) #b"foo")
+
+
+;; (type (bytearray "jfkdlas"))
+
+;; #b"fkjdla"
+
+(bslurp "blind_sql_injection.tmpl")
+
+
+#_(println (send host port #b"GET / HTTP/1.1\r\nHost: 0a01006a0359c5778160fcad00ab0040.web-security-academy.net\r\n\r\n"))
+
+
+
