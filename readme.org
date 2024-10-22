@@ -4,3 +4,10 @@
 
 For now just a breeding ground for Basilisp and other Clojure hacking
 utils, solve scripts and so forth.
+
+*Usage*
+Launch basilisp with src/ added to PYTHONPATH, e.g
+
+#+begin_src sh
+PYTHONPATH=../basifangs/src basilisp repl
+#+end_src
