@@ -52,22 +52,35 @@
    (char-by-char starts-with? ""))
   
   ([starts-with? prefix]
-   (char-by-char starts-with? prefix {:chars flag-chars}))
+   (char-by-char starts-with? prefix {:chars flag-chars
+                                      :max-length 100}))
   
   ([starts-with?
     prefix
     {:as opts
      :keys [chars]}]
-   (let [new-prefix 
-         (binding [*pmap-cpu-count* (count chars)]
-           (->> chars
-                (pmap (comp (juxt identity starts-with?) (partial str prefix)))
-                (map (fn [[new-prefix match?]]
-                       (println [new-prefix match?])
-                       (when match? new-prefix)))
-                (filter identity)
-                first))]
-     (if-not new-prefix
-       (println "No new prefix found. Stopping search.")
-       (do (println "New prefix:" new-prefix)
-           (char-by-char starts-with? new-prefix opts))))))
+   (if (>= (count new-prefix) max-length)
+     ;; Sometimes we get false positives. E.g a regex prefix is
+     ;; evolving like so:
+     ;;
+     ;; 1. fjdkal.
+     ;; 2. fjdkal..
+     ;; 3. fjdkal...
+     ;; n. fjdkal...........................
+     ;;
+     ;; We don't want to accidentally DOS any servers so we
+     ;; automatically quit after a while.
+     (println "Prefix hit :max-length. Stopping search.")
+     (let [new-prefix 
+           (binding [*pmap-cpu-count* (count chars)]
+             (->> chars
+                  (pmap (comp (juxt identity starts-with?) (partial str prefix)))
+                  (map (fn [[new-prefix match?]]
+                         (println [new-prefix match?])
+                         (when match? new-prefix)))
+                  (filter identity)
+                  first))]
+       (if-not new-prefix
+         (println "No new prefix found. Stopping search.")
+         (do (println "New prefix:" new-prefix)
+             (char-by-char starts-with? new-prefix opts)))))))
