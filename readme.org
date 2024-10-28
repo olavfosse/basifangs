@@ -5,9 +5,29 @@
 For now just a breeding ground for Basilisp and other Clojure hacking
 utils, solve scripts and so forth.
 
+*Goals*
+
+- Some degree of cross platform support. There's a lot of tooling on
+  the JVM too, most importantly Burp and Ghidra.
+- Liveness and transparency. It should be trivial to look into the
+  program and see what it's doing, do manual control flow, etc.
+- Easiness
+- Helpful DSLs
+- Flexibility
+- Means of visualization
+- DWIM DWIM DWIM DWIM DWIM DWIM DWIM DWIM
+  
+*Non-goals*
+
+- Be pure or create indirections between native libs.
+- Strict backwards compatibility
+- Be very reliable
+
 *Usage*
 Launch basilisp with src/ added to PYTHONPATH, e.g
 
 #+begin_src sh
 PYTHONPATH=../basifangs/src basilisp repl
 #+end_src
+
+*
