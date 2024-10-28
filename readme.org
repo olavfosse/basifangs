@@ -1,4 +1,4 @@
-- I prefer programming in Clojure
+- Clojure is an extension of my hands
 - Most hacking tooling is in python
 - Basilisp
 
