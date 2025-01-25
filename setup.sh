@@ -5,4 +5,5 @@ if [ ! -d "venv" ]; then
 fi
 source venv/bin/activate 
 pip3 install basilisp
-
+pip3 install requests
+basilisp nrepl-server
