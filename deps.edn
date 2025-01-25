@@ -1,11 +1,16 @@
 {:deps    {com.hyperfiddle/electric       {:mvn/version "v3-alpha-SNAPSHOT"}
-           org.clojure/clojure            {:mvn/version "1.12.0-alpha5"}
+           org.clojure/clojure            {:mvn/version "1.12.0"}
            org.clojure/clojurescript      {:mvn/version "1.11.121"}
            org.clojure/tools.logging      {:mvn/version "1.2.4"}
            ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
            ring/ring                      {:mvn/version "1.11.0"} ; to serve the app
            ring-basic-authentication/ring-basic-authentication {:mvn/version "1.2.0"} ; for demo
-           }
+           no.olavfosse/xio {:local/root "../../Developer/xio"}
+           net.cgrand/xforms {:git/url "https://github.com/cgrand/xforms"
+                              :git/sha "78076f8cd078ebb336ed9047df873ebc2ecf3aa1"}
+           #_{:git/url "https://github.com/olavfosse/xio"
+              :git/sha "413ec03d728520c2cf69bf40b6eaf3b8517cbfd5"}
+           duratom/duratom {:mvn/version "0.5.9"}}
  :paths   ["src" "resources"]
  :aliases {:dev {:extra-paths ["src-dev"]
                  :extra-deps  {thheller/shadow-cljs {:mvn/version "2.26.2"}}}

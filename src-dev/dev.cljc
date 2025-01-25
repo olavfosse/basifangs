@@ -7,7 +7,10 @@
    #?(:clj [electric-starter-app.server-jetty :as jetty])
    #?(:clj [shadow.cljs.devtools.api :as shadow])
    #?(:clj [shadow.cljs.devtools.server :as shadow-server])
-   #?(:clj [clojure.tools.logging :as log])))
+   #?(:clj [clojure.tools.logging :as log])
+   #?(:clj [clojure.repl.deps :refer [sync-deps]])))
+
+(comment (sync-deps))
 
 (comment (-main)) ; repl entrypoint
 
