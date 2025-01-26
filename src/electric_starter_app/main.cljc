@@ -2,8 +2,9 @@
   #?(:clj (:import java.io.File
                    java.nio.file.Path))
   (:require #?(:clj [clojure.java.io :as jio])
+            #?(:clj [clojure.pprint :as pp])
             [basifangs.utils :as bfu]
-            #_[basifangs.bintoys :as bintoys]
+            [basifangs.bintoys :as bintoys]
             [contrib.str :refer [includes-str?]]
             [hyperfiddle.electric3 :as e]
             [hyperfiddle.electric-dom3 :as dom]
@@ -11,6 +12,11 @@
             #?(:clj [duratom.core :refer [duratom]])
             #?(:clj [no.olavfosse.xio :as xio])))
 
+#_(defn pprint-str [x]
+    (with-out-str (pp/pprint x)))
+#?(:clj (defn pprint-str [x]
+          (with-out-str
+            (pp/pprint x))))
 
 #?(:cljs (defonce !state (atom {:file nil})))
 
@@ -62,6 +68,10 @@
   (println x)
   x)
 
+(defn try-elf64:parse [bs]
+  (try (bintoys/elf64:parse bs)
+       (catch Exception e (str e))))
+
 #?(:clj (defn capture [x]
           (def fjkdasfjsakl x)
           x))
@@ -81,7 +91,7 @@
                    (when path
                      (dom/div (dom/b (dom/text path)))
                      (let [bs (e/server (xio/bslurp path))]
-                       #_(dom/pre (dom/text (clojure.pprint/pprint (bfu))))
+                       (dom/pre (dom/text (e/server (pprint-str (try-elf64:parse bs)))))
                        (dom/textarea
                          (dom/props {:cols bfu/*line-width*})
                          (dom/text (bfu/bytes->hex bs)))))))))))

@@ -134,3 +134,17 @@
 
 
 
+
+(defn bytes->int [endianness bs]
+  #?(:lpy (.from_bytes python/int (python/bytes bs) (name endianness))
+     :clj (case endianness
+            :little (long (first (reduce (fn [[sum multiplier] inp]
+                                           [(+ sum (* multiplier inp)) (* multiplier 256)])
+                                         [0
+                                          ;; If there's 8 bytes, the
+                                          ;; multiplier will long
+                                          ;; overflow. Therefore we
+                                          ;; use bigint.
+                                          (bigint 1)]
+                                         bs)))
+            :big (bytes->int :little (reverse bs)))))

@@ -1,25 +1,37 @@
-(ns bangsfangs.bintoys
-  (:require [basifangs.utils :refer [bslurp]]))
+(ns basifangs.bintoys
+  "For now the bytes representation is vector of ints from 0-255. Might
+  try clope later."
+  (:require [basifangs.utils :as bfu]
+            [no.olavfosse.xio :as xio]))
+
+
 
 (defn partition-bytes [partitions bs]
   (into {}
         (comp (partition-all 2)
               (map (let [!bs (atom bs)]
                      (fn [[field width]]
-                       (let [v (python/bytes (take width @!bs))]
+                       (let [v (into [] (take width) @!bs)]
                          (swap! !bs (partial drop width))
                          [field v])))))
         partitions))
 
 (defn elf64:endianness [elf]
-  (case (get-in elf [:header/e_ident :EI_DATA])
-    #b"\x01" :little
-    #b"\x02" :big))
+  ;; We can't have \xAB escape sequences in cljc files, because
+  ;; Clojure's reader throws an exception, even if they're
+  ;; behind :lpy reader conditionals
+  ;;
+  ;; Broken unforunately:
+  ;; (case (get-in elf [:header/e_ident :EI_DATA])
+  ;;   #b"\x01" :little
+  ;;   #b"\x02" :big)
+  (case (get-in elf [:header/e_ident :EI_DATA 0])
+    1 :little
+    2 :big))
 
 (defn tee [x] (prn x) x)
 
-(defn bytes->int [endianness bs]
-  (.from_bytes python/int bs (name endianness)))
+
 
 (defn elf64:parse-header [bs] 
   ;; typedef struct elf64_hdr {
@@ -71,17 +83,22 @@
                                                   :EI_OSABI 1
                                                   :EI_ABIVERSION 1
                                                   :EI_PAD 7]))
-        elf (update elf :header/e_phoff (partial bytes->int (elf64:endianness elf)))]
+        elf (update elf :header/e_phoff (partial bfu/bytes->int (elf64:endianness elf)))]
     elf))
 
 
 (defn elf64:parse-pht [bs])
 
 (defn elf64:parse [bs]
-  (let [header (->> bs (take 64) python/bytes elf64:parse-header)
+  (let [header (elf64:parse-header (into [] (take 64) bs))
         pht (->> bs (drop (:header/e_phoff header)) elf64:parse-pht)]
     (merge header pht)))
 
 (comment
-  (elf64:endianness (elf64:parse (bslurp "/Users/olav/Hacking/basifangs/src/basifangs/hello.elf")))
-  (elf64:parse (bslurp "/Users/olav/Hacking/basifangs/src/basifangs/hello.elf")))
+  (elf64:endianness (elf64:parse (xio/bslurp "/Users/olav/Hacking/basifangs/workspace/hello.elf")))
+  (elf64:parse (xio/bslurp "/Users/olav/Hacking/basifangs/workspace/hello.elf"))
+  (bfu/bytes->hex (mapv #(- % 128)  (xio/bslurp "/Users/olav/Hacking/basifangs/workspace/hello.elf")))
+
+  (count (xio/bslurp-raw "/Users/olav/Hacking/basifangs/workspace/hello.elf") )27192
+  ;; $ wc -c /Users/olav/Hacking/basifangs/workspace/hello.elf 27192
+  )
