@@ -68,13 +68,26 @@
   (println x)
   x)
 
-(defn try-elf64:parse [bs]
-  (try (bintoys/elf64:parse bs)
-       (catch Exception e (str e))))
+#?(:clj (defn try-elf64:parse [bs]
+          (try (bintoys/elf64:parse bs)
+               (catch Exception e (str e)))))
 
 #?(:clj (defn capture [x]
           (def fjkdasfjsakl x)
           x))
+
+#?(:clj (defn bytes-fileatom [path]
+          (let [!a (atom (xio/bslurp path))]
+            (add-watch !a :write (fn [_key _ref _old new]
+                                   (prn :writing)
+                                   (xio/bspit path new)))
+            !a)))
+
+#?(:clj (defn try-hex->bytes [bs]
+          (prn :foo)
+          (try (bfu/hex->bytes bs)
+               (catch Exception e nil))))
+
 (e/defn Main [ring-request]
   (e/client
     (binding [dom/node js/document.body
@@ -90,8 +103,30 @@
                                         (e/server (reset! !path path)))))
                    (when path
                      (dom/div (dom/b (dom/text path)))
-                     (let [bs (e/server (xio/bslurp path))]
+                     (let [!bs (e/server (bytes-fileatom path))
+                           bs (e/server (e/watch !bs))]
                        (dom/pre (dom/text (e/server (pprint-str (try-elf64:parse bs)))))
                        (dom/textarea
                          (dom/props {:cols bfu/*line-width*})
+                         (e/client nil
+                                   (let [e (dom/On "input" identity nil)
+                                         ;; Note: token can take nil
+                                         [t err] (e/Token e)]
+                                     (when t
+                                       (prn [t err])
+                                       (when-not err
+                                         (e/client (print (subs (-> e .-target .-value) 0 10)))
+                                         (e/server
+                                           (if-let [bs (try-hex->bytes (e/client (-> e .-target .-value)))]
+                                             (do
+                                               (e/client (println :non-nil))
+                                               (e/client (println (empty? bs)))
+                                                 (reset! !bs bs))
+                                             (e/client
+                                               (e/client (println :nil))
+                                               (print :invalid)
+                                               (dom/props {:style {:background-color "red"}})))
+                                           nil))
+                                       (t))))
                          (dom/text (bfu/bytes->hex bs)))))))))))
+  
