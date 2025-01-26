@@ -47,7 +47,6 @@
         (dom/li (e/client (dom/button
                             (when-some [e (dom/On "click" identity nil)]
                               (when-some [t (first (e/Token e))]
-                                (println t)
                                 (e/server (SelectFile (str (File/.getPath h))))
                                 #_(e/server (bfo/bytes->hex (xio/bslurp )))
                                 (t)))
@@ -79,20 +78,33 @@
 #?(:clj (defn bytes-fileatom [path]
           (let [!a (atom (xio/bslurp path))]
             (add-watch !a :write (fn [_key _ref _old new]
-                                   (prn :writing)
+                                   (prn :writing (take 10 new))
                                    (xio/bspit path new)))
             !a)))
 
 #?(:clj (defn try-hex->bytes [bs]
-          (prn :foo)
-          (try (bfu/hex->bytes bs)
-               (catch Exception e nil))))
+          (when (even? (count bs))
+              (try (bfu/hex->bytes bs)
+                   (catch Throwable e nil)))))
+
+(e/defn Hex-textarea [hex Set-hex]
+  (dom/textarea
+    (dom/props {:cols bfu/*line-width*
+                :rows 30})
+    (dom/text hex)
+    (e/client
+      (let [e (dom/On "input" identity nil)
+            [t err] (e/Token e)]
+        (when t
+          (println :event-received (subs (-> e .-target .-value) 0 10) (type (-> e .-target .-value)) (type ""))
+          (e/client (Set-hex (-> e .-target .-value)))
+          (t))))))
 
 (e/defn Main [ring-request]
   (e/client
     (binding [dom/node js/document.body
               e/http-request (e/server ring-request)]
-      ; mandatory wrapper div https://github.com/hyperfiddle/electric/issues/74
+                                        ; mandatory wrapper div https://github.com/hyperfiddle/electric/issues/74
       (dom/div (dom/props {:style {:display "contents"}})
 
                (e/server
@@ -105,28 +117,34 @@
                      (dom/div (dom/b (dom/text path)))
                      (let [!bs (e/server (bytes-fileatom path))
                            bs (e/server (e/watch !bs))]
-                       (dom/pre (dom/text (e/server (pprint-str (try-elf64:parse bs)))))
-                       (dom/textarea
+                       
+                       #_(dom/pre (dom/text (e/server (pprint-str (try-elf64:parse bs)))))
+                       (dom/text (e/server (str (type bs))))
+
+
+                       (Hex-textarea (bfu/bytes->hex bs)
+                                     (e/client (e/fn Set-hex [h]
+                                                 (e/server 
+                                                   (when-let [bs (try-hex->bytes h)]
+                                                     (reset! !bs bs)))
+                                                 nil))
+                                     )
+                       
+                       #_(dom/textarea
                          (dom/props {:cols bfu/*line-width*})
-                         (e/client nil
-                                   (let [e (dom/On "input" identity nil)
-                                         ;; Note: token can take nil
-                                         [t err] (e/Token e)]
-                                     (when t
-                                       (prn [t err])
-                                       (when-not err
-                                         (e/client (print (subs (-> e .-target .-value) 0 10)))
-                                         (e/server
-                                           (if-let [bs (try-hex->bytes (e/client (-> e .-target .-value)))]
-                                             (do
-                                               (e/client (println :non-nil))
-                                               (e/client (println (empty? bs)))
-                                                 (reset! !bs bs))
-                                             (e/client
-                                               (e/client (println :nil))
-                                               (print :invalid)
-                                               (dom/props {:style {:background-color "red"}})))
-                                           nil))
-                                       (t))))
-                         (dom/text (bfu/bytes->hex bs)))))))))))
-  
+                         (dom/text (bfu/bytes->hex bs))
+                         
+                         (e/client
+                             (let [e (dom/On "input" identity nil)
+                                   ;; Note: token can take nil
+                                   [t err] (e/Token e)]
+                               (when t
+                                 (do (when-not err
+                                       (do 
+                                         (e/client (prn (-> e .-target .-value)))
+                                         (e/client (prn (e/server (try-hex->bytes (-> e .-target .-value)))))
+                                         #_(e/client (print (e/server (try-hex->bytes (e/client (str (-> e .-target .-value)))))))
+                                         (if-let [bs (e/server (try-hex->bytes (e/client (-> e .-target .-value))))]
+                                           (e/client nil #_(prn bs))
+                                           (e/client (prn :err)) #_(do (dom/props {:style {:background-color "red"}}))))))
+                                 (t)))))))))))))
