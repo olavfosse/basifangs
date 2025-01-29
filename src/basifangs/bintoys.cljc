@@ -102,3 +102,5 @@
   (count (xio/bslurp-raw "/Users/olav/Hacking/basifangs/workspace/hello.elf") )27192
   ;; $ wc -c /Users/olav/Hacking/basifangs/workspace/hello.elf 27192
   )
+
+;; TODO: write earl vm disasembler

@@ -24,10 +24,32 @@ utils, solve scripts and so forth.
 - Be very reliable
 
 *Usage*
+
 Launch basilisp with src/ added to PYTHONPATH, e.g
 
 #+begin_src sh
 PYTHONPATH=../basifangs/src basilisp repl
 #+end_src
 
-*
+*Index* - everything is WIP
+
+- src/basifangs/utils.cljc
+  - cross-host toolkit for stuff that's generally useful
+  - core.cljc might be a better name :^)
+- src/basifangs/bintoys.cljc
+  - decomplected cross-host toolkit for binary synthesis, analysis and
+    exploitation
+- src/electric_starter_app/main.cljc, src-dev, etc
+  - electric clojure gui on top of the entire basifangs toolkit
+- xio library
+  - cross-host io toolkit
+  - will support tubes ala pwntools soon™️
+
+*Wants*
+
+A JVM Clojure macro =basilisp= which executes body as basilisp and
+returns the result. Syncronous is fine.
+
+(basilisp (+ #_"this is executed in python" 1 2))
+
+
